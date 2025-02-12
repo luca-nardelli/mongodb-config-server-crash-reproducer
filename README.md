@@ -73,7 +73,8 @@ db.adminCommand(
 )
 ```
 
-IMPORTANT: Note that MinKey and MaxKey are **strings** and not instances of MinKey() or MaxKey().
+
+**⚠️IMPORTANT:**  Note that MinKey and MaxKey are **strings** and not instances of MinKey() or MaxKey(). In my case, this happened because I was generating the zones array via a script, but by checking the error logs, I'd say this happens anytime `min` is not less than `max`.
 
 
 Immediately after the resharding is submitted, you'll start seeing the following warning in the logs:
