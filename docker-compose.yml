@@ -1,0 +1,72 @@
+volumes:
+  mongo_cfg_data:
+  mongo_shard0_data:
+  mongo_shard1_data:
+
+services:
+  mongo:
+    image: mongodb-sharded
+    build:
+      context: ./mongo
+      dockerfile: sharded.Dockerfile
+    restart: on-failure
+    hostname: mongodb
+    environment:
+      MONGODB_USERNAME: admin
+      MONGODB_PASSWORD: password
+      MONGODB_DATABASE: defaultdb
+      MONGODB_ADVERTISED_HOSTNAME: mongo
+      MONGODB_SHARDING_MODE: mongos
+      MONGODB_CFG_PRIMARY_HOST: mongo-cfg
+      MONGODB_CFG_REPLICA_SET_NAME: cfgreplicaset
+      MONGODB_REPLICA_SET_KEY: replicasetkey123
+      MONGODB_ROOT_PASSWORD: password123
+    ports:
+      - 27017:27017
+      
+  mongo-cfg:
+    image: mongodb
+    build:
+      context: ./mongo
+      dockerfile: sharded.Dockerfile
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-cfg
+      - MONGODB_SHARDING_MODE=configsvr
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=cfgreplicaset
+    volumes:
+      - mongo_cfg_data:/data/configdb
+
+  mongo-shard0:
+    image: mongodb
+    build:
+      context: ./mongo
+      dockerfile: sharded.Dockerfile
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard0
+      - MONGODB_SHARDING_MODE=shardsvr
+      - MONGODB_MONGOS_HOST=mongo
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=shard0
+    volumes:
+      - mongo_shard0_data:/data/db
+
+  mongo-shard1:
+    image: mongodb
+    build:
+      context: ./mongo
+      dockerfile: sharded.Dockerfile
+    environment:
+      - MONGODB_ADVERTISED_HOSTNAME=mongo-shard1
+      - MONGODB_SHARDING_MODE=shardsvr
+      - MONGODB_MONGOS_HOST=mongo
+      - MONGODB_ROOT_PASSWORD=password123
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_REPLICA_SET_KEY=replicasetkey123
+      - MONGODB_REPLICA_SET_NAME=shard1
+    volumes:
+      - mongo_shard1_data:/data/db
